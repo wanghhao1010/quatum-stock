@@ -1,5 +1,5 @@
 # ================================================================
-# 🧠 跨國 AI 4D 雙變量集成終端核心 (Python 3.11 專用標準版)
+# 🧠 跨國 AI 4D 雙變量集成終端核心 (Python 3.11 標準完全體)
 # ================================================================
 import streamlit as st
 import pandas as pd
@@ -56,7 +56,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ----------------------------------------------------------------
-# 2. 🔐 Supabase 資料庫連線配置 (安全環境密鑰版)
+# 2. 🔐 Supabase 資料庫連線配置
 # ----------------------------------------------------------------
 try:
     SUPABASE_URL = st.secrets["SUPABASE_URL"]
@@ -79,7 +79,6 @@ def init_supabase() -> Client:
 supabase_client = init_supabase()
 
 def async_log_to_supabase(data_dict):
-    """ 使用非同步獨立執行緒寫入，確保網頁反應速度保持毫秒級 """
     if supabase_client:
         try:
             supabase_client.table("regime_logs").insert(data_dict).execute()
@@ -87,7 +86,7 @@ def async_log_to_supabase(data_dict):
             pass
 
 # ----------------------------------------------------------------
-# 3. 側邊欄配置
+# 3. 側邊欄配置與主計算模組
 # ----------------------------------------------------------------
 st.sidebar.header("⚙️ 5日短線配置核心")
 search_input = st.sidebar.text_input("✍ 請輸入台股代碼 (如2382) 或 美股代碼 (如NVDA)", value="2382").strip()
@@ -118,9 +117,6 @@ if search_input:
         if len(df) < 40:
             st.error("歷史數據長度不足以執行四系統大一統集成。")
         else:
-            # ------------------------------------------------------------
-            # SYSTEM 2 幾何核心：通道與 OLS 回歸斜率
-            # ------------------------------------------------------------
             df['MA_20'] = close_s.rolling(20).mean()
             bb_std = close_s.rolling(20).std()
             df['BB_Upper'] = df['MA_20'] + (bb_std * 2)
@@ -151,9 +147,6 @@ if search_input:
             current_atr = float(df['ATR_14'].iloc[-1])
             last_p = float(close_s.iloc[-1])
             
-            # ------------------------------------------------------------
-            # SYSTEM 1 籌碼核心：法人流向與相對量能
-            # ------------------------------------------------------------
             if is_tw:
                 raw_inflow = (close_s.diff().tail(35).squeeze() * vol_s.tail(35).squeeze()).sum() / (vol_s.tail(35).squeeze().sum() + 1e-9)
                 net_inflow_ratio = float(np.clip(raw_inflow * 12, -100.0, 100.0))
@@ -173,9 +166,6 @@ if search_input:
             relative_vol_ratio = float(five_hour_vol / baseline_vol)
             is_hot = relative_vol_ratio >= 1.4
 
-            # ------------------------------------------------------------
-            # SYSTEM 4 變化核心：跨時環比
-            # ------------------------------------------------------------
             lookback_offset = 7 if is_tw else 8  
             today_volume_now = float(vol_s.iloc[-1])
             yesterday_volume_then = float(vol_s.iloc[-lookback_offset]) + 1e-9
@@ -191,9 +181,6 @@ if search_input:
             is_macro_accel = delta_smi_slope_macro > 0 and delta_volume_ratio_macro > 15.0
             is_micro_accel = delta_smi_slope_micro > 0 and delta_volume_ratio_micro > 10.0
 
-            # ------------------------------------------------------------
-            # 💡 SYSTEM 3 AI 大一統：自動化權重自適應解算器 (Regime Switching)
-            # ------------------------------------------------------------
             long_term_atr = float(tr.rolling(120).mean().iloc[-1]) + 1e-9
             volatility_shock_ratio = current_atr / long_term_atr
             
@@ -218,7 +205,6 @@ if search_input:
             
             ensemble_score = int((score_sys1 * (w1/100)) + (score_sys2 * (w2/100)) + (score_sys4 * (w4/100)))
             
-            # 微觀下砸出貨懲罰
             if delta_smi_slope_micro < -0.25 and current_smi > 0:
                 ensemble_score -= 15
             
@@ -256,9 +242,6 @@ if search_input:
                 ai_situation_analysis = f"目前盤勢屬於**安全、規律且溫和的上升常態軌道**。集成得分為 {ensemble_score} 分。價格成功穩踩在生命線之上，斜率溫和放大，沒有任何見頂 or 大戶反手砸盤的異值特徵。"
                 ai_institutional_analysis = f"**【大戶黑手戰術拆解】** 5日資金流穩定維持在 {net_inflow_ratio:+.1f}% 偏多位階。這顯示主力機構正在執行**『每日平滑限價吸籌』**。他們不急於在一天之內強行拉高，而是規律地吃下浮額。此時不需要盲目重倉追價，用 50% 倉位順著時K月線慢條斯理地抱股，是統計學上的最高期望值解。"
 
-            # ------------------------------------------------------------
-            # 🧠 數據儲存：觸發 Supabase 背景異步存檔機制
-            # ------------------------------------------------------------
             log_payload = {
                 "ticker": str(search_input),
                 "price": float(last_p),
@@ -273,9 +256,6 @@ if search_input:
             }
             threading.Thread(target=async_log_to_supabase, args=(log_payload,), daemon=True).start()
 
-            # ------------------------------------------------------------
-            # 5. 前端核心看板渲染
-            # ------------------------------------------------------------
             st.markdown(f"""<div class='brain-box'>🧠 <b>SYSTEM 3 頂層智慧決策狀態：</b> {regime_broadcast} 📡 <span style='color:#0284c7;'>【數據已即時同步至 Supabase 雲端資料庫】</span></div>""", unsafe_allow_html=True)
 
             sys1_css = "bg-hot" if is_hot else "bg-freeze"
@@ -300,7 +280,6 @@ if search_input:
             with col3:
                 st.markdown(f"""<div class='sys-card {sys3_css}'><div class='sys-title'>⚡ SYSTEM 3 (AI統合決策)</div><div style='font-size:13px; font-weight:bold; margin:4px 0;'>{sys3_pos}</div><div class='sys-desc'>{sys3_desc}</div><div class='sig-price-box'>{sys3_price}</div></div>""", unsafe_allow_html=True)
 
-            # AI 剖析大看板
             st.markdown(f"""
                 <div class='analysis-box'>
                     <h4>🚨 AI SYSTEM 3 大一統整合現況深度剖析與大戶戰術解碼</h4>
@@ -316,7 +295,6 @@ if search_input:
                 </div>
             """, unsafe_allow_html=True)
 
-            # AI 白皮書
             st.markdown(f"""
                 <div class='evidence-box'>
                     <h4>🎯 5日 AI 四系統獨立特徵交叉審查白皮書 (AI 自適應決策版)</h4>
@@ -328,12 +306,11 @@ if search_input:
                 </div>
             """, unsafe_allow_html=True)
             
-            # 高級雙畫布 (四色幾何變色龍)
             st.write("---")
             df_chart = df.tail(60)
             fig = make_subplots(rows=2, cols=1, shared_xaxes=True, 
                                 vertical_spacing=0.08, 
-                                subplot_titles=("📈 SYSTEM 2：時K雙通道空間幾全幾何結構", "📡 SYSTEM 2：SMI 一階線性回歸斜率動能矩陣 (四色幾何變色龍)"),
+                                subplot_titles=("📈 SYSTEM 2：時K雙通道空間幾何結構", "📡 SYSTEM 2：SMI 一階線性回歸斜率動能矩陣 (四色幾何變色龍)"),
                                 row_width=[0.3, 0.7])
             
             fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart['BB_Upper'], name="布林上軌", line=dict(color='rgba(30,58,138,0.2)'), showlegend=False), row=1, col=1)
@@ -347,7 +324,6 @@ if search_input:
             for i in range(len(df_chart)):
                 curr_val = smi_vals[i]
                 prev_val = smi_vals[i-1] if i > 0 else curr_val
-                
                 if curr_val >= 0:
                     gradient_colors.append('#dc2626' if curr_val >= prev_val else '#fca5a5') 
                 else:
