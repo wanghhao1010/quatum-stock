@@ -1,22 +1,5 @@
-import os
-import sys
-import subprocess
-
 # ================================================================
-# 🚀 終極暴力自動修復補丁 (解決 Streamlit Cloud 漏抓 Private 倉庫套件的官方 Bug)
-# ================================================================
-try:
-    import yfinance as yf
-    import supabase
-except ImportError:
-    # 發現缺套件時，直接動用系統底層權限強行 pip install
-    subprocess.check_call([
-        sys.executable, "-m", "pip", "install", 
-        "streamlit", "pandas", "numpy", "yfinance", "plotly", "supabase"
-    ])
-
-# ================================================================
-# 🧠 核心量化模組載入
+# 🧠 跨國 AI 4D 雙變量集成終端核心 (Python 3.11 專用標準版)
 # ================================================================
 import streamlit as st
 import pandas as pd
@@ -270,7 +253,7 @@ if search_input:
                 action_signal = "MILD_BUY"
                 sys3_desc = f"<b>統合決定：</b>常態慢速趨勢。幾何切線穩定居於地上 0 軸上方，大戶溫和吸籌，適合慢速分批建倉搭便車。"
                 sys3_price = f"🎯 進場：<b>${buy_target:.2f}</b> | 🛡️ 停損：<b>${stop_loss:.2f}</b> | 💰 預期停利：<b>${take_profit_long:.2f}</b>"
-                ai_situation_analysis = f"目前盤勢屬於**安全、規律且溫和的上升常態軌道**。集成得分為 {ensemble_score} 分。價格成功穩踩在生命線之上，斜率溫和放大，沒有任何見頂或大戶反手砸盤的異值特徵。"
+                ai_situation_analysis = f"目前盤勢屬於**安全、規律且溫和的上升常態軌道**。集成得分為 {ensemble_score} 分。價格成功穩踩在生命線之上，斜率溫和放大，沒有任何見頂 or 大戶反手砸盤的異值特徵。"
                 ai_institutional_analysis = f"**【大戶黑手戰術拆解】** 5日資金流穩定維持在 {net_inflow_ratio:+.1f}% 偏多位階。這顯示主力機構正在執行**『每日平滑限價吸籌』**。他們不急於在一天之內強行拉高，而是規律地吃下浮額。此時不需要盲目重倉追價，用 50% 倉位順著時K月線慢條斯理地抱股，是統計學上的最高期望值解。"
 
             # ------------------------------------------------------------
@@ -350,7 +333,7 @@ if search_input:
             df_chart = df.tail(60)
             fig = make_subplots(rows=2, cols=1, shared_xaxes=True, 
                                 vertical_spacing=0.08, 
-                                subplot_titles=("📈 SYSTEM 2：時K雙通道空間幾何結構", "📡 SYSTEM 2：SMI 一階線性回歸斜率動能矩陣 (四色幾何變色龍)"),
+                                subplot_titles=("📈 SYSTEM 2：時K雙通道空間幾全幾何結構", "📡 SYSTEM 2：SMI 一階線性回歸斜率動能矩陣 (四色幾何變色龍)"),
                                 row_width=[0.3, 0.7])
             
             fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart['BB_Upper'], name="布林上軌", line=dict(color='rgba(30,58,138,0.2)'), showlegend=False), row=1, col=1)
