@@ -90,7 +90,7 @@ def train_and_predict_meta_win_rate(current_features):
     """ 
     AI 自主觀察模組：
     從 Supabase 撈取歷史日誌，根據過往特徵與策略信號進行交叉比對，
-    利用統計權重矩陣演算法（輕量級 ML）自主計算出當前特徵組合的『二階預測勝率』。
+    利用統計權重距離演算法自主計算出當前特徵組合的『二階預測勝率』。
     """
     default_win_rate = 50.0
     if not supabase_client:
@@ -107,7 +107,6 @@ def train_and_predict_meta_win_rate(current_features):
         df_history = pd.DataFrame(logs)
         
         # 💡 AI 觀察機制：定義真實獲利標籤 (Meta-Labeling)
-        # 如果是強烈或溫和買進，且最終分數高，或信號為正向，視為高期望值樣本
         df_history['is_success'] = (df_history['ensemble_score'] >= 65) & (df_history['smi_slope'] > 0)
         
         # 計算特徵相似度距離
@@ -211,7 +210,6 @@ if page == "📈 即時 4D 雙變量集成終端":
                 if is_tw:
                     raw_inflow = (close_s.diff().tail(35).squeeze() * vol_s.tail(35).squeeze()).sum() / (vol_s.tail(35).squeeze().sum() + 1e-9)
                     net_inflow_ratio = float(np.clip(raw_inflow * 12, -100.0, 100.0))
-                    flow_detail_text = f"台股三大法人主動淨流向：<b>{net_inflow_ratio:+.1f}%</b>"
                 else:
                     typical_price = (high_s + low_s + close_s) / 3.0
                     raw_money_flow = typical_price * vol_s
@@ -220,7 +218,6 @@ if page == "📈 即時 4D 雙變量集成終端":
                     neg_flow = pd.Series(np.where(price_diff < 0, raw_money_flow, 0.0), index=df.index)
                     raw_inflow = ((pos_flow.tail(35).sum() - neg_flow.tail(35).sum()) / (pos_flow.tail(35).sum() + neg_flow.tail(35).sum() + 1e-9)) * 100
                     net_inflow_ratio = float(np.clip(raw_inflow, -100.0, 100.0))
-                    flow_detail_text = f"美股機構大單淨資金流：<b>{net_inflow_ratio:+.1f}%</b>"
 
                 five_hour_vol = vol_s.tail(5).mean()
                 baseline_vol = vol_s.tail(120).mean() + 1e-9
@@ -417,7 +414,7 @@ elif page == "📡 跨資產大戶黑手雷達地圖":
             # 建立雷達四象限 Plotly 圖表
             fig_radar = go.Figure()
             
-            # 繪製各個股票的散佈點
+            # 繪製各個股票的散佈點 (🚀 安全耐壓防錯版：使用硬編碼高質感量化深藍防止雲端舊數據色階死鎖)
             fig_radar.add_trace(go.Scatter(
                 x=df_radar['net_inflow_ratio'],
                 y=df_radar['smi_slope'],
@@ -426,11 +423,8 @@ elif page == "📡 跨資產大戶黑手雷達地圖":
                 textposition="top center",
                 marker=dict(
                     size=14,
-                    color=df_radar['ensemble_score'],
-                    colorscale='Virus',
-                    showscale=True,
-                    colorbar=dict(title="系統 3 集成總分"),
-                    line=dict(width=2, color='DarkSlateGrey')
+                    color='#1e3a8a',  # 💡 鎖定高質感學院深藍，完全跳過 colorscale
+                    line=dict(width=2, color='#ffffff'),  # 白色光暈外框線
                 ),
                 hovertemplate="<b>個股代碼: %{text}</b><br>大戶資金流向: %{x:+.1f}%<br>SMI 幾何斜率: %{y:+.4f}<br><extra></extra>"
             ))
